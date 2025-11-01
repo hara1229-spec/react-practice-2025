@@ -1,91 +1,100 @@
-// src/components/AddTask.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import TaskList from "./TaskList";
 
-export default function AddTask({ tasks, setTasks }) {
-  const [v, setV] = useState("");
-  const [showDeleted, setShowDeleted] = useState(false);
+export default function AddTask() {
+  const [tasks, setTasks] = useState([]);
+  const [deletedTasks, setDeletedTasks] = useState([]);
+  const [input, setInput] = useState("");
 
-  const addTask = (e) => {
-    e.preventDefault();
-    const text = v.trim();
-    if (!text) return;
-    setTasks([{ id: Date.now(), text, done: false, deleted: false }, ...tasks]);
-    setV("");
+  // 1️⃣ 初回読み込み時にlocalStorageからデータを復元
+  useEffect(() => {
+    const savedTasks = localStorage.getItem("tasks");
+    const savedDeleted = localStorage.getItem("deletedTasks");
+    if (savedTasks) setTasks(JSON.parse(savedTasks));
+    if (savedDeleted) setDeletedTasks(JSON.parse(savedDeleted));
+  }, []);
+
+  // 2️⃣ tasksまたはdeletedTasksが変わるたびに保存
+  useEffect(() => {
+    localStorage.setItem("tasks", JSON.stringify(tasks));
+    localStorage.setItem("deletedTasks", JSON.stringify(deletedTasks));
+  }, [tasks, deletedTasks]);
+
+  // 3️⃣ タスク追加
+  const handleAdd = () => {
+    if (!input.trim()) return;
+    setTasks(prev => [...prev, { id: Date.now(), text: input, done: false }]);
+    setInput("");
   };
 
-  const toggle = (id) =>
-    setTasks(
-      tasks.map((t) => (t.id === id ? { ...t, done: !t.done } : t))
-    );
+  // 4️⃣ タスク削除
+const handleDelete = (id) => {
+  setTasks((prevTasks) => {
+    const taskToDelete = prevTasks.find((t) => t.id === id);
+    const newTasks = prevTasks.filter((t) => t.id !== id);
 
-  const remove = (id) =>
-    setTasks(
-      tasks.map((t) => (t.id === id ? { ...t, deleted: true } : t))
-    );
+    if (taskToDelete) {
+      // ✅ ここで安全に deletedTasks に追加（setTasksと同時に）
+      setDeletedTasks((prevDeleted) => [...prevDeleted, taskToDelete]);
+    }
 
-  const restore = (id) =>
-    setTasks(
-      tasks.map((t) => (t.id === id ? { ...t, deleted: false } : t))
-    );
+    return newTasks;
+  });
+};
 
-  const visibleTasks = tasks.filter((t) =>
-    showDeleted ? t.deleted : !t.deleted
-  );
+
+  // 5️⃣ 完了トグル
+  const handleToggleDone = (id) => {
+    setTasks(prev =>
+      prev.map((t) => t.id === id ? { ...t, done: !t.done } : t)
+    );
+  };
+
+  // 6️⃣ 復元
+  const handleRestore = (id) => {
+    setDeletedTasks(prevDeleted => {
+      const taskToRestore = prevDeleted.find((t) => t.id === id);
+      if (taskToRestore) {
+        setTasks(prev => [...prev, taskToRestore]);
+        return prevDeleted.filter((t) => t.id !== id);
+      }
+      return prevDeleted;
+    });
+  };
+
+  const activeTasks = tasks.filter((t) => !t.done);
+  const completedTasks = tasks.filter((t) => t.done);
 
   return (
     <div>
-      <form onSubmit={addTask} style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+      <div style={{ marginBottom: "20px" }}>
         <input
-          value={v}
-          onChange={(e) => setV(e.target.value)}
-          placeholder="Add task..."
-          style={{ flex: 1 }}
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          placeholder="タスクを入力"
         />
-        <button type="submit">Add</button>
-        <button
-          type="button"
-          onClick={() => setShowDeleted((prev) => !prev)}
-        >
-          {showDeleted ? "タスクリストへ戻る" : "削除済みを見る"}
-        </button>
-      </form>
+        <button onClick={handleAdd}>追加</button>
+      </div>
 
-      <ul style={{ listStyle: "none", padding: 0 }}>
-        {visibleTasks.map((t) => (
-          <li
-            key={t.id}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-              padding: 8,
-              borderBottom: "1px solid #eee",
-            }}
-          >
-            {!showDeleted && (
-              <input
-                type="checkbox"
-                checked={t.done}
-                onChange={() => toggle(t.id)}
-              />
-            )}
-            <div
-              style={{
-                flex: 1,
-                textDecoration: t.done ? "line-through" : "none",
-                color: t.deleted ? "#888" : "inherit",
-              }}
-            >
-              {t.text}
-            </div>
-            {showDeleted ? (
-              <button onClick={() => restore(t.id)}>復元</button>
-            ) : (
-              <button onClick={() => remove(t.id)}>削除</button>
-            )}
-          </li>
-        ))}
-      </ul>
+      <TaskList
+        title="現在のタスク"
+        tasks={activeTasks}
+        onToggleDone={handleToggleDone}
+        onDelete={handleDelete}
+      />
+
+      <TaskList
+        title="完了したタスク"
+        tasks={completedTasks}
+        onToggleDone={handleToggleDone}
+      />
+
+      <TaskList
+        title="削除済みタスク"
+        tasks={deletedTasks}
+        onRestore={handleRestore}
+        isDeletedList={true}
+      />
     </div>
   );
 }
