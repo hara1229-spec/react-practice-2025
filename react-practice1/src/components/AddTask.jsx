@@ -1,61 +1,41 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import TaskList from "./TaskList";
 
-export default function AddTask() {
-  const [tasks, setTasks] = useState([]);
-  const [deletedTasks, setDeletedTasks] = useState([]);
+export default function AddTask({ tasks, setTasks, deletedTasks, setDeletedTasks }) {
   const [input, setInput] = useState("");
 
-  // 1️⃣ 初回読み込み時にlocalStorageからデータを復元
-  useEffect(() => {
-    const savedTasks = localStorage.getItem("tasks");
-    const savedDeleted = localStorage.getItem("deletedTasks");
-    if (savedTasks) setTasks(JSON.parse(savedTasks));
-    if (savedDeleted) setDeletedTasks(JSON.parse(savedDeleted));
-  }, []);
-
-  // 2️⃣ tasksまたはdeletedTasksが変わるたびに保存
-  useEffect(() => {
-    localStorage.setItem("tasks", JSON.stringify(tasks));
-    localStorage.setItem("deletedTasks", JSON.stringify(deletedTasks));
-  }, [tasks, deletedTasks]);
-
-  // 3️⃣ タスク追加
+  // 1️⃣ タスク追加
   const handleAdd = () => {
     if (!input.trim()) return;
     setTasks(prev => [...prev, { id: Date.now(), text: input, done: false }]);
     setInput("");
   };
 
-  // 4️⃣ タスク削除
-const handleDelete = (id) => {
-  setTasks((prevTasks) => {
-    const taskToDelete = prevTasks.find((t) => t.id === id);
-    const newTasks = prevTasks.filter((t) => t.id !== id);
+  // 2️⃣ 削除
+  const handleDelete = (id) => {
+    setTasks((prevTasks) => {
+      const taskToDelete = prevTasks.find((t) => t.id === id);
+      const newTasks = prevTasks.filter((t) => t.id !== id);
+      if (taskToDelete) {
+        setDeletedTasks((prevDeleted) => [...prevDeleted, taskToDelete]);
+      }
+      return newTasks;
+    });
+  };
 
-    if (taskToDelete) {
-      // ✅ ここで安全に deletedTasks に追加（setTasksと同時に）
-      setDeletedTasks((prevDeleted) => [...prevDeleted, taskToDelete]);
-    }
-
-    return newTasks;
-  });
-};
-
-
-  // 5️⃣ 完了トグル
+  // 3️⃣ 完了トグル
   const handleToggleDone = (id) => {
     setTasks(prev =>
-      prev.map((t) => t.id === id ? { ...t, done: !t.done } : t)
+      prev.map((t) => (t.id === id ? { ...t, done: !t.done } : t))
     );
   };
 
-  // 6️⃣ 復元
+  // 4️⃣ 復元
   const handleRestore = (id) => {
-    setDeletedTasks(prevDeleted => {
+    setDeletedTasks((prevDeleted) => {
       const taskToRestore = prevDeleted.find((t) => t.id === id);
       if (taskToRestore) {
-        setTasks(prev => [...prev, taskToRestore]);
+        setTasks((prev) => [...prev, taskToRestore]);
         return prevDeleted.filter((t) => t.id !== id);
       }
       return prevDeleted;
