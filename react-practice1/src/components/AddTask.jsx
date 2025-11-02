@@ -12,16 +12,22 @@ export default function AddTask({ tasks, setTasks, deletedTasks, setDeletedTasks
   };
 
   // 2️⃣ 削除
-  const handleDelete = (id) => {
-    setTasks((prevTasks) => {
-      const taskToDelete = prevTasks.find((t) => t.id === id);
-      const newTasks = prevTasks.filter((t) => t.id !== id);
-      if (taskToDelete) {
-        setDeletedTasks((prevDeleted) => [...prevDeleted, taskToDelete]);
-      }
-      return newTasks;
-    });
-  };
+const handleDelete = (id) => {
+  setTasks((prevTasks) => {
+    const taskToDelete = prevTasks.find((t) => t.id === id);
+    const newTasks = prevTasks.filter((t) => t.id !== id);
+
+    if (taskToDelete) {
+      setDeletedTasks((prevDeleted) => {
+        // ✅ すでに存在する場合は追加しない
+        if (prevDeleted.some((t) => t.id === taskToDelete.id)) return prevDeleted;
+        return [...prevDeleted, taskToDelete];
+      });
+    }
+
+    return newTasks;
+  });
+};
 
   // 3️⃣ 完了トグル
   const handleToggleDone = (id) => {
