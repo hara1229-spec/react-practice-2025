@@ -37,16 +37,21 @@ const handleDelete = (id) => {
   };
 
   // 4️⃣ 復元
-  const handleRestore = (id) => {
-    setDeletedTasks((prevDeleted) => {
-      const taskToRestore = prevDeleted.find((t) => t.id === id);
-      if (taskToRestore) {
-        setTasks((prev) => [...prev, taskToRestore]);
-        return prevDeleted.filter((t) => t.id !== id);
-      }
-      return prevDeleted;
-    });
-  };
+const handleRestore = (id) => {
+  setDeletedTasks((prevDeleted) => {
+    const taskToRestore = prevDeleted.find((t) => t.id === id);
+    if (taskToRestore) {
+      setTasks((prev) => {
+        // ✅ 同じIDのタスクが存在する場合はスキップ
+        if (prev.some((t) => t.id === taskToRestore.id)) return prev;
+        return [...prev, taskToRestore];
+      });
+      return prevDeleted.filter((t) => t.id !== id);
+    }
+    return prevDeleted;
+  });
+};
+
 
   const activeTasks = tasks.filter((t) => !t.done);
   const completedTasks = tasks.filter((t) => t.done);
