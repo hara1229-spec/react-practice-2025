@@ -4,6 +4,7 @@ export default function TaskList({
   onToggleDone,
   onDelete,
   onRestore,
+  onPermanentDelete,
   isDeletedList = false,
 }) {
   return (
@@ -39,8 +40,12 @@ export default function TaskList({
                     {task.done ? "戻す" : "完了"}
                   </button>
 
-                  {/* ✅ 完了タスクには削除ボタンを表示しない */}
-                  {title !== "完了したタスク" && (
+                    {/* 完了タスク専用の完全削除ボタン */}
+                  {title === "完了したタスク" ? (
+                    <button onClick={() => onPermanentDelete(task.id)}>
+                      完全に削除
+                    </button>
+                  ) : (
                     <button onClick={() => onDelete(task.id)}>削除</button>
                   )}
                 </>
@@ -48,7 +53,12 @@ export default function TaskList({
 
               {/* 削除済みタスク */}
               {isDeletedList && (
-                <button onClick={() => onRestore(task.id)}>復元</button>
+                <>
+                  <button onClick={() => onRestore(task.id)}>復元</button>
+                  <button onClick={() => onPermanentDelete?.(task.id)}>
+                    完全に削除
+                  </button>
+                </>
               )}
             </li>
           ))}

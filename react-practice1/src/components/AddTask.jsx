@@ -52,6 +52,25 @@ const handleRestore = (id) => {
   });
 };
 
+// 完全削除（単体）
+const handlePermanentDelete = (id) => {
+  setTasks(prev => prev.filter(t => t.id !== id));
+};
+
+// 完了タスクをすべて削除
+const handleClearCompleted = () => {
+  setTasks(prev => prev.filter(t => !t.done));
+};
+
+  // 🆕 削除済みタスクの完全削除（個別）
+  const handlePermanentDeleteFromDeleted = (id) => {
+    setDeletedTasks(prev => prev.filter(t => t.id !== id));
+  };
+
+  // 🆕 削除済みタスクをすべて削除
+  const handleClearDeleted = () => {
+    setDeletedTasks([]); // 全消去
+  };
 
   const activeTasks = tasks.filter((t) => !t.done);
   const completedTasks = tasks.filter((t) => t.done);
@@ -74,18 +93,34 @@ const handleRestore = (id) => {
         onDelete={handleDelete}
       />
 
-      <TaskList
-        title="完了したタスク"
-        tasks={completedTasks}
-        onToggleDone={handleToggleDone}
-      />
+<TaskList
+  title="完了したタスク"
+  tasks={completedTasks}
+  onToggleDone={handleToggleDone}
+  onPermanentDelete={handlePermanentDelete}
+/>
+
+{completedTasks.length > 0 && (
+  <button onClick={handleClearCompleted} style={{ marginTop: "10px" }}>
+    完了したタスクをすべて削除
+  </button>
+)}
+
 
       <TaskList
         title="削除済みタスク"
         tasks={deletedTasks}
         onRestore={handleRestore}
+         onPermanentDelete={handlePermanentDeleteFromDeleted}
         isDeletedList={true}
       />
+
+      {deletedTasks.length > 0 && (
+        <button onClick={handleClearDeleted} style={{ marginTop: "10px" }}>
+          削除済みタスクをすべて削除
+        </button>
+      )}
+      
     </div>
   );
 }
