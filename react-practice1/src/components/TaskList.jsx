@@ -40,7 +40,7 @@ export default function TaskList({
                     {task.done ? "戻す" : "完了"}
                   </button>
 
-                    {/* 完了タスク専用の完全削除ボタン */}
+                  {/* 完了タスク専用の完全削除ボタン */}
                   {title === "完了したタスク" ? (
                     <button onClick={() => onPermanentDelete(task.id)}>
                       完全に削除
